@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'landmarks_list_screen.dart';
+import 'map_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -27,7 +29,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const Center(child: Text('Map View - coming soon')),
+    const MapScreen(),
     const LandmarksListScreen(),
     const Center(child: Text('Activity Screen - coming soon')),
     const Center(child: Text('Add Landmark - coming soon')),

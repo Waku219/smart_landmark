@@ -5,6 +5,7 @@ class Landmark {
   final double lon;
   final String image;
   final double score;
+  final bool isActive;
 
   Landmark({
     required this.id,
@@ -13,6 +14,7 @@ class Landmark {
     required this.lon,
     required this.image,
     required this.score,
+    required this.isActive,
   });
 
   factory Landmark.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,11 @@ class Landmark {
       lon: double.parse(json['lon'].toString()),
       image: json['image'],
       score: double.parse(json['score'].toString()),
+      isActive: json['is_active'] == 1,
     );
   }
+
+  String get imageUrl => image.isNotEmpty
+      ? 'https://labs.anontech.info/cse489/exm3/$image'
+      : '';
 }

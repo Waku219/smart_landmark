@@ -11,10 +11,14 @@ class LandmarksListScreen extends StatefulWidget {
 
 class _LandmarksListScreenState extends State<LandmarksListScreen> {
   final ApiService _apiService = ApiService();
+
   List<Landmark> _landmarks = [];
+
   bool _isLoading = true;
   String? _error;
+
   bool _sortDescending = true;
+
   double _minScoreFilter = double.negativeInfinity;
 
   @override
@@ -26,6 +30,7 @@ class _LandmarksListScreenState extends State<LandmarksListScreen> {
   Future<void> _loadLandmarks() async {
     try {
       final landmarks = await _apiService.getLandmarks();
+
       setState(() {
         _landmarks = landmarks;
         _isLoading = false;
@@ -44,58 +49,76 @@ class _LandmarksListScreenState extends State<LandmarksListScreen> {
           ? ''
           : _minScoreFilter.toString(),
     );
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter by minimum score'),
-        content: TextField(
-          controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(
-            decimal: true,
-            signed: true,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Filter by minimum score'),
+          content: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(
+              decimal: true,
+              signed: true,
+            ),
+            decoration: const InputDecoration(
+              hintText: 'e.g. -500000',
+            ),
           ),
-          decoration: const InputDecoration(hintText: 'e.g. -500000'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _minScoreFilter = double.negativeInfinity;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _minScoreFilter =
-                    double.tryParse(controller.text) ?? double.negativeInfinity;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Apply'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _minScoreFilter = double.negativeInfinity;
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text('Clear'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _minScoreFilter =
+                      double.tryParse(controller.text) ??
+                          double.negativeInfinity;
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null) {
-      return Center(child: Text('Error: $_error'));
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
+    if (_error != null) {
+      return Center(
+        child: Text('Error: $_error'),
+      );
+    }
+
+    // Filter active landmarks and minimum score
     final filteredList = _landmarks
-        .where((l) => l.score >= _minScoreFilter)
+        .where(
+          (l) => l.isActive && l.score >= _minScoreFilter,
+    )
         .toList()
-      ..sort((a, b) => _sortDescending
-          ? b.score.compareTo(a.score)
-          : a.score.compareTo(b.score));
+      ..sort(
+            (a, b) => _sortDescending
+            ? b.score.compareTo(a.score)
+            : a.score.compareTo(b.score),
+      );
 
     return Column(
       children: [
@@ -105,7 +128,9 @@ class _LandmarksListScreenState extends State<LandmarksListScreen> {
             children: [
               IconButton(
                 icon: Icon(
-                  _sortDescending ? Icons.arrow_downward : Icons.arrow_upward,
+                  _sortDescending
+                      ? Icons.arrow_downward
+                      : Icons.arrow_upward,
                 ),
                 onPressed: () {
                   setState(() {
@@ -113,20 +138,25 @@ class _LandmarksListScreenState extends State<LandmarksListScreen> {
                   });
                 },
               ),
+
               const Text('Sort by score'),
+
               const Spacer(),
+
               IconButton(
                 icon: const Icon(Icons.filter_list),
-                onPressed: () => _showFilterDialog(),
+                onPressed: _showFilterDialog,
               ),
             ],
           ),
         ),
+
         Expanded(
           child: ListView.builder(
             itemCount: filteredList.length,
             itemBuilder: (context, index) {
               final landmark = filteredList[index];
+
               return ListTile(
                 leading: landmark.imageUrl.isNotEmpty
                     ? Image.network(
@@ -135,9 +165,16 @@ class _LandmarksListScreenState extends State<LandmarksListScreen> {
                   height: 56,
                   fit: BoxFit.cover,
                 )
-                    : const Icon(Icons.place, size: 40),
+                    : const Icon(
+                  Icons.place,
+                  size: 40,
+                ),
+
                 title: Text(landmark.title),
-                subtitle: Text('Score: ${landmark.score.toStringAsFixed(1)}'),
+
+                subtitle: Text(
+                  'Score: ${landmark.score.toStringAsFixed(1)}',
+                ),
               );
             },
           ),

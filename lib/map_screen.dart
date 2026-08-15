@@ -155,7 +155,7 @@ class _MapScreenState extends State<MapScreen> {
           userAgentPackageName: 'com.example.smart_landmarks',
         ),
         MarkerLayer(
-          markers: _landmarks.map((landmark) {
+          markers: _landmarks.where((l) => l.isActive).map((landmark) {
             return Marker(
               point: LatLng(landmark.lat, landmark.lon),
               width: 40,

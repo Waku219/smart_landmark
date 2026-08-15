@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'landmark.dart';
 import 'api_service.dart';
+import 'location_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -13,6 +14,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final ApiService _apiService = ApiService();
+  final LocationService _locationService = LocationService();
   List<Landmark> _landmarks = [];
   bool _isLoading = true;
 
@@ -45,18 +47,89 @@ class _MapScreenState extends State<MapScreen> {
   void _showLandmarkDetail(Landmark landmark) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(landmark.title),
         content: Text('Score: ${landmark.score.toStringAsFixed(1)}\n'
             'Lat: ${landmark.lat}, Lon: ${landmark.lon}'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _visitLandmark(landmark);
+            },
+            child: const Text('Visit'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _visitLandmark(Landmark landmark) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Getting your location...')),
+    );
+
+    try {
+      final position = await _locationService.getCurrentLocation();
+
+      final jobId = await _apiService.visitLandmark(
+        landmark.id,
+        position.latitude,
+        position.longitude,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Visit submitted, job #$jobId processing...')),
+      );
+
+      _pollJobStatus(jobId, landmark.title);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _pollJobStatus(int jobId, String landmarkTitle) async {
+    const maxAttempts = 15;
+    for (int i = 0; i < maxAttempts; i++) {
+      await Future.delayed(const Duration(seconds: 2));
+
+      try {
+        final status = await _apiService.getJobStatus(jobId);
+        if (status['status'] == 'done') {
+          final distance = status['distance'];
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '$landmarkTitle visited! Distance: ${distance.toStringAsFixed(2)}m',
+                ),
+              ),
+            );
+          }
+          return;
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Polling error: $e')),
+          );
+        }
+        return;
+      }
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Job taking too long, giving up.')),
+      );
+    }
   }
 
   @override

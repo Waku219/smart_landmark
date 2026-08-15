@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'landmark.dart';
+import 'dart:io';
 
 class ApiService {
   static const String baseUrl =
@@ -70,6 +71,29 @@ class ApiService {
       throw Exception(
         'Failed to get job status: ${response.statusCode}',
       );
+    }
+  }
+  Future<void> createLandmark({
+    required String title,
+    required double lat,
+    required double lon,
+    required File imageFile,
+  }) async {
+    final url = Uri.parse('$baseUrl?action=create_landmark&key=$apiKey');
+    final request = http.MultipartRequest('POST', url);
+
+    request.fields['title'] = title;
+    request.fields['lat'] = lat.toString();
+    request.fields['lon'] = lon.toString();
+    request.files.add(
+      await http.MultipartFile.fromPath('image', imageFile.path),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to create landmark: ${response.statusCode}');
     }
   }
 }

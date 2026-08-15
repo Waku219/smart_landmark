@@ -43,6 +43,9 @@ dev_dependencies:
   latlong2: ^0.9.1
   geolocator: ^13.0.1
   image_picker: ^1.1.2
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  connectivity_plus: ^6.1.0
 
 
   # The "flutter_lints" package below contains a set of recommended lints to

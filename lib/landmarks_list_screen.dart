@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'landmark.dart';
 import 'api_service.dart';
+import 'db_helper.dart';
 
 class LandmarksListScreen extends StatefulWidget {
   const LandmarksListScreen({super.key});
@@ -11,6 +12,7 @@ class LandmarksListScreen extends StatefulWidget {
 
 class _LandmarksListScreenState extends State<LandmarksListScreen> {
   final ApiService _apiService = ApiService();
+  final DBHelper _dbHelper = DBHelper();
 
   List<Landmark> _landmarks = [];
 
@@ -28,18 +30,31 @@ class _LandmarksListScreenState extends State<LandmarksListScreen> {
   }
 
   Future<void> _loadLandmarks() async {
+    // Step 1: আগে cache থেকে দেখাও (থাকলে), দ্রুত UI দেখানোর জন্য
+    final cached = await _dbHelper.getCachedLandmarks();
+    if (cached.isNotEmpty) {
+      setState(() {
+        _landmarks = cached;
+        _isLoading = false;
+      });
+    }
+
+    // Step 2: সার্ভার থেকে fresh data আনার চেষ্টা করো
     try {
       final landmarks = await _apiService.getLandmarks();
-
+      await _dbHelper.cacheLandmarks(landmarks);
       setState(() {
         _landmarks = landmarks;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      // সার্ভার আনতে ব্যর্থ (offline) — cache থেকে data থাকলে সেটাই দেখাতে থাকবে
+      if (cached.isEmpty) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 

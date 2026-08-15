@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'landmark.dart';
 import 'api_service.dart';
 import 'location_service.dart';
+import 'visit_history_service.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -105,6 +106,7 @@ class _MapScreenState extends State<MapScreen> {
         final status = await _apiService.getJobStatus(jobId);
         if (status['status'] == 'done') {
           final distance = status['distance'];
+          VisitHistoryService().addVisit(landmarkTitle, distance);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

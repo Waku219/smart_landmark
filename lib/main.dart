@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'landmarks_list_screen.dart';
 import 'map_screen.dart';
+import 'activity_screen.dart';
 
 
 void main() {

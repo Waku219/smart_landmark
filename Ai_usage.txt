@@ -1,0 +1,41 @@
+AI USAGE
+CSE 489 Lab Exam - Smart Geo-Tagged Landmarks
+Student ID: 22299219
+
+
+Tool used: Claude (Anthropic).
+
+
+What AI was used for
+--------------------
+
+- Reviewing the codebase against the assignment spec and the API
+  reference, and listing the gaps.
+- Debugging. The main one: get_landmarks returned rows with null
+  lat/lon, so double.parse("null") threw and killed the whole list.
+  AI queried the live API, found the bad rows (ids 108, 115, 116, 122
+  and out-of-range ids 58, 128), and identified the cause.
+- Writing the fixes for those issues: tolerant parsing, HTTP status
+  handling for retry decisions, the WorkManager sync worker,
+  background-isolate plugin registration, the SQLite v3 migration and
+  its concurrent-open guard, and error/retry states in the UI.
+- Drafting this file and README.txt.
+
+
+What was done without AI
+------------------------
+
+- Choosing Flutter, the package set, and the overall screen layout.
+- Initial implementation of the four screens, the API client and the
+  SQLite cache.
+- All testing on a physical device; every reported symptom that led to
+  a fix came from running the app.
+
+
+Justification
+-------------
+
+AI was used the way a debugger and a reviewer would be: to inspect
+live API data, explain failures, and check the implementation against
+the spec. Every change was applied to this repository, built, and
+verified on a real device before being kept.
